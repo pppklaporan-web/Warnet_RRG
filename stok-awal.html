@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Konsumsi Warnet RRG — Stok Awal</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  margin: 0;
+  padding: 16px;
+}
+h1 {
+  text-align: center;
+}
+.card {
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+label {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+input, select, button {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+th {
+  background: #2563eb;
+  color: white;
+}
+button {
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  margin-top: 16px;
+  font-size: 16px;
+}
+button:disabled {
+  background: #aaa;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Stok Awal Konsumsi</h1>
+
+<div class="card">
+  <label>Tanggal</label>
+  <input type="date" id="tanggal">
+
+  <label>Shift</label>
+  <select id="shift">
+    <option value="">Pilih Shift</option>
+    <option value="PAGI">PAGI</option>
+    <option value="MALAM">MALAM</option>
+  </select>
+
+  <label>Nama Operator</label>
+  <input type="text" id="operator" placeholder="Nama operator">
+</div>
+
+<div class="card">
+  <table id="tabelBarang">
+    <thead>
+      <tr>
+        <th>Barang</th>
+        <th>Stok Awal</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <button onclick="simpanStokAwal()">Simpan Stok Awal</button>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbyNPpcvY2hiGXZSXs_TAl-1m6o_4py4Mx2088hK0iay8LAxvbPrfffwy23hhQ64U9fspA/exec";
+
+document.getElementById("tanggal").value =
+  new Date().toISOString().split("T")[0];
+
+let barangList = [];
+
+/* ===============================
+   LOAD BARANG
+=============================== */
+fetch(API_URL + "?action=getBarang")
+  .then(res => res.json())
+  .then(data => {
+    barangList = data;
+    const tbody = document.querySelector("#tabelBarang tbody");
+    tbody.innerHTML = "";
+
+    data.forEach(b => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${b.nama}</td>
+        <td>
+          <input type="number" min="0" data-kode="${b.kode}" value="0">
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+
+/* ===============================
+   SIMPAN STOK AWAL
+=============================== */
+function simpanStokAwal() {
+  const tanggal = document.getElementById("tanggal").value;
+  const shift = document.getElementById("shift").value;
+  const operator = document.getElementById("operator").value.trim();
+
+  if (!tanggal || !shift || !operator) {
+    alert("Lengkapi tanggal, shift, dan operator");
+    return;
+  }
+
+  const inputs = document.querySelectorAll("#tabelBarang input");
+  const data = [];
+
+  inputs.forEach(inp => {
+    data.push({
+      tanggal,
+      shift,
+      operator,
+      kode: inp.dataset.kode,
+      stok_awal: Number(inp.value)
+    });
+  });
+
+  fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "stokAwal",
+      data
+    })
+  })
+  .then(res => res.json())
+  .then(res => {
+    if (res.status) {
+      alert("Stok awal berhasil disimpan");
+    } else {
+      alert(res.message);
+    }
+  });
+}
+</script>
+
+</body>
+</html>
