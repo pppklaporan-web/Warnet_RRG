@@ -125,6 +125,7 @@ fetch(API_URL + "?action=getBarang")
 /* ===============================
    SIMPAN STOK AWAL
 =============================== */
+<script>
 function simpanStokAwal() {
   const tanggal = document.getElementById("tanggal").value;
   const shift = document.getElementById("shift").value;
@@ -150,7 +151,6 @@ function simpanStokAwal() {
 
   fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       action: "stokAwal",
       data
@@ -163,8 +163,14 @@ function simpanStokAwal() {
     } else {
       alert(res.message);
     }
+  })
+  .catch(err => {
+    alert("Gagal koneksi ke server");
+    console.error(err);
   });
 }
+</script>
+
 </script>
 
 </body>
